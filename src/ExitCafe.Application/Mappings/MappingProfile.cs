@@ -1,5 +1,7 @@
 using AutoMapper;
 using ExitCafe.Application.DTOs.Categories;
+using ExitCafe.Application.DTOs.Contact;
+using ExitCafe.Application.DTOs.CustomCakeOrders;
 using ExitCafe.Application.DTOs.Customers;
 using ExitCafe.Application.DTOs.Orders;
 using ExitCafe.Application.DTOs.Products;
@@ -32,5 +34,8 @@ public class MappingProfile : Profile
         CreateMap<Order, OrderDto>()
             .ForMember(d => d.CustomerName, o => o.MapFrom(s => s.Customer.FirstName + " " + s.Customer.LastName))
             .ForMember(d => d.Items, o => o.MapFrom(s => s.OrderItems));
+
+        CreateMap<CustomCakeOrder, CustomCakeOrderDto>();
+        CreateMap<ContactMessage, ContactMessageDto>();
     }
 }

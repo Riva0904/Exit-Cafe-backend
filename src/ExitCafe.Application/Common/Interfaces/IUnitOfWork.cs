@@ -15,6 +15,8 @@ public interface IUnitOfWork
     IRepository<Order> Orders { get; }
     IRepository<OrderItem> OrderItems { get; }
     IRepository<AuditLog> AuditLogs { get; }
+    IRepository<CustomCakeOrder> CustomCakeOrders { get; }
+    IRepository<ContactMessage> ContactMessages { get; }
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }
