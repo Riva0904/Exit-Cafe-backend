@@ -1,7 +1,9 @@
+using ExitCafe.Application.Common.Interfaces;
 using ExitCafe.Application.Common.Models;
 using ExitCafe.Application.DTOs.Orders;
 using ExitCafe.Application.Services.Interfaces;
 using ExitCafe.Domain.Enums;
+using ExitCafe.Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,10 +14,21 @@ namespace ExitCafe.WebApi.Controllers;
 public class OrdersController : ControllerBase
 {
     private readonly IOrderService _orderService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public OrdersController(IOrderService orderService)
+    public OrdersController(IOrderService orderService, ICurrentUserService currentUserService)
     {
         _orderService = orderService;
+        _currentUserService = currentUserService;
+    }
+
+    [HttpGet("my")]
+    [Authorize]
+    public async Task<ActionResult<ApiResponse<List<OrderDto>>>> GetMyOrders(CancellationToken ct)
+    {
+        var userId = _currentUserService.UserId ?? throw new UnauthorizedException();
+        var result = await _orderService.GetByUserIdAsync(userId, ct);
+        return Ok(ApiResponse<List<OrderDto>>.Ok(result));
     }
 
     [HttpGet]

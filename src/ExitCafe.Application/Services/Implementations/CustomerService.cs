@@ -48,6 +48,14 @@ public class CustomerService : ICustomerService
         return _mapper.Map<CustomerDto>(customer);
     }
 
+    public async Task<CustomerDto> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
+    {
+        var customer = await _uow.Customers.Query().Include(c => c.Addresses).Include(c => c.Orders)
+            .FirstOrDefaultAsync(c => c.UserId == userId, ct)
+            ?? throw new NotFoundException(nameof(Customer), userId);
+        return _mapper.Map<CustomerDto>(customer);
+    }
+
     public async Task<CustomerAddressDto> AddAddressAsync(Guid customerId, CreateAddressRequest request, CancellationToken ct = default)
     {
         if (!await _uow.Customers.AnyAsync(c => c.Id == customerId, ct))

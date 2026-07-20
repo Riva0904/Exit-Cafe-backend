@@ -51,6 +51,14 @@ public class OrderService : IOrderService
         _mapper.Map<List<OrderDto>>(await BaseQuery().Where(o => o.CustomerId == customerId)
             .OrderByDescending(o => o.CreatedAt).ToListAsync(ct));
 
+    public async Task<List<OrderDto>> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
+    {
+        var customer = await _uow.Customers.FirstOrDefaultAsync(c => c.UserId == userId, ct);
+        if (customer is null) return new List<OrderDto>();
+
+        return await GetByCustomerAsync(customer.Id, ct);
+    }
+
     public async Task<OrderDto> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
         var order = await BaseQuery().FirstOrDefaultAsync(o => o.Id == id, ct)

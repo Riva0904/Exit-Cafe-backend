@@ -1,6 +1,8 @@
+using ExitCafe.Application.Common.Interfaces;
 using ExitCafe.Application.Common.Models;
 using ExitCafe.Application.DTOs.Customers;
 using ExitCafe.Application.Services.Interfaces;
+using ExitCafe.Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,10 +13,12 @@ namespace ExitCafe.WebApi.Controllers;
 public class CustomersController : ControllerBase
 {
     private readonly ICustomerService _customerService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public CustomersController(ICustomerService customerService)
+    public CustomersController(ICustomerService customerService, ICurrentUserService currentUserService)
     {
         _customerService = customerService;
+        _currentUserService = currentUserService;
     }
 
     [HttpGet]
@@ -23,6 +27,15 @@ public class CustomersController : ControllerBase
     {
         var result = await _customerService.GetAllAsync(query, ct);
         return Ok(ApiResponse<PagedResult<CustomerDto>>.Ok(result));
+    }
+
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<ActionResult<ApiResponse<CustomerDto>>> GetMe(CancellationToken ct)
+    {
+        var userId = _currentUserService.UserId ?? throw new UnauthorizedException();
+        var result = await _customerService.GetByUserIdAsync(userId, ct);
+        return Ok(ApiResponse<CustomerDto>.Ok(result));
     }
 
     [HttpGet("{id:guid}")]
