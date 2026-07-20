@@ -13,11 +13,13 @@ public class CategoryService : ICategoryService
 {
     private readonly IUnitOfWork _uow;
     private readonly IMapper _mapper;
+    private readonly IAuditLogService _auditLog;
 
-    public CategoryService(IUnitOfWork uow, IMapper mapper)
+    public CategoryService(IUnitOfWork uow, IMapper mapper, IAuditLogService auditLog)
     {
         _uow = uow;
         _mapper = mapper;
+        _auditLog = auditLog;
     }
 
     public async Task<List<CategoryDto>> GetAllAsync(bool includeInactive, CancellationToken ct = default)
@@ -90,12 +92,23 @@ public class CategoryService : ICategoryService
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
-        var category = await _uow.Categories.GetByIdAsync(id, ct)
+        var category = await _uow.Categories.Query().Include(c => c.Products)
+            .FirstOrDefaultAsync(c => c.Id == id, ct)
             ?? throw new NotFoundException(nameof(Category), id);
+
+        // A soft-deleted category is excluded by its own query filter, which silently drops any
+        // product still assigned to it out of Include()-based joins (count queries still see them,
+        // list queries don't — a confusing, hard-to-spot data gap). Deactivate instead of blocking
+        // outright would still hide products from customers, so require the category to be emptied
+        // (or its products reassigned) first.
+        if (category.Products.Any(p => !p.IsDeleted))
+            throw new ConflictException(
+                $"Cannot delete '{category.Name}': it still has {category.Products.Count(p => !p.IsDeleted)} product(s). Reassign or remove them first.");
 
         category.IsDeleted = true;
         category.IsActive = false;
         _uow.Categories.Update(category);
         await _uow.SaveChangesAsync(ct);
+        await _auditLog.LogAsync("CategoryDeleted", nameof(Category), category.Id.ToString(), ct: ct);
     }
 }
