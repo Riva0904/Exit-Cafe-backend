@@ -168,6 +168,31 @@ public class ProductService : IProductService
         return _mapper.Map<ProductDto>(updated);
     }
 
+    public async Task<ProductDto> UpdateImagesAsync(Guid id, UpdateProductImagesRequest request, CancellationToken ct = default)
+    {
+        var product = await BaseQuery().FirstOrDefaultAsync(p => p.Id == id, ct)
+            ?? throw new NotFoundException(nameof(Product), id);
+
+        foreach (var image in product.Images.ToList())
+            _uow.ProductImages.Remove(image);
+
+        for (var idx = 0; idx < request.ImageUrls.Count; idx++)
+        {
+            await _uow.ProductImages.AddAsync(new ProductImage
+            {
+                ProductId = product.Id,
+                ImageUrl = request.ImageUrls[idx],
+                IsPrimary = idx == 0,
+                DisplayOrder = idx
+            }, ct);
+        }
+
+        await _uow.SaveChangesAsync(ct);
+
+        var updated = await BaseQuery().FirstAsync(p => p.Id == product.Id, ct);
+        return _mapper.Map<ProductDto>(updated);
+    }
+
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
         var product = await _uow.Products.GetByIdAsync(id, ct)

@@ -63,6 +63,8 @@ public record UpdateProductRequest(
     bool IsAvailable, bool IsFeatured, bool IsBestSeller, bool IsNewArrival, bool IsTodaysSpecial,
     int StockQuantity, Guid CategoryId);
 
+public record UpdateProductImagesRequest(List<string> ImageUrls);
+
 public class ProductQueryParams
 {
     public Guid? CategoryId { get; set; }

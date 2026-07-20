@@ -31,3 +31,13 @@ public class UpdateProductRequestValidator : AbstractValidator<UpdateProductRequ
         RuleFor(x => x.CategoryId).NotEmpty();
     }
 }
+
+public class UpdateProductImagesRequestValidator : AbstractValidator<UpdateProductImagesRequest>
+{
+    public UpdateProductImagesRequestValidator()
+    {
+        RuleFor(x => x.ImageUrls).NotEmpty().WithMessage("At least one image URL is required.");
+        RuleForEach(x => x.ImageUrls).NotEmpty().Must(url => Uri.TryCreate(url, UriKind.Absolute, out _))
+            .WithMessage("Each image URL must be a valid absolute URL.");
+    }
+}

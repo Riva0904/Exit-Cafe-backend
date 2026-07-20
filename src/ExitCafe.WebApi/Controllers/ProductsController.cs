@@ -70,6 +70,14 @@ public class ProductsController : ControllerBase
         return Ok(ApiResponse<ProductDto>.Ok(result, "Product updated."));
     }
 
+    [HttpPut("{id:guid}/images")]
+    [Authorize(Policy = "StaffAndAbove")]
+    public async Task<ActionResult<ApiResponse<ProductDto>>> UpdateImages(Guid id, UpdateProductImagesRequest request, CancellationToken ct)
+    {
+        var result = await _productService.UpdateImagesAsync(id, request, ct);
+        return Ok(ApiResponse<ProductDto>.Ok(result, "Product images updated."));
+    }
+
     [HttpDelete("{id:guid}")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
