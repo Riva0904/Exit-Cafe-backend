@@ -132,7 +132,9 @@ public class ProductService : IProductService
 
         await _uow.Products.AddAsync(product, ct);
         await _uow.SaveChangesAsync(ct);
-        return _mapper.Map<ProductDto>(product);
+
+        var created = await BaseQuery().FirstAsync(p => p.Id == product.Id, ct);
+        return _mapper.Map<ProductDto>(created);
     }
 
     public async Task<ProductDto> UpdateAsync(Guid id, UpdateProductRequest request, CancellationToken ct = default)
@@ -161,7 +163,9 @@ public class ProductService : IProductService
 
         _uow.Products.Update(product);
         await _uow.SaveChangesAsync(ct);
-        return _mapper.Map<ProductDto>(product);
+
+        var updated = await BaseQuery().FirstAsync(p => p.Id == product.Id, ct);
+        return _mapper.Map<ProductDto>(updated);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)

@@ -83,7 +83,9 @@ public class CategoryService : ICategoryService
 
         _uow.Categories.Update(category);
         await _uow.SaveChangesAsync(ct);
-        return _mapper.Map<CategoryDto>(category);
+
+        var updated = await _uow.Categories.Query().Include(c => c.Products).FirstAsync(c => c.Id == category.Id, ct);
+        return _mapper.Map<CategoryDto>(updated);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
