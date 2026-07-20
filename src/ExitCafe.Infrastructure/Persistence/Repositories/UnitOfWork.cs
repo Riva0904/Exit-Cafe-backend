@@ -23,6 +23,7 @@ public class UnitOfWork : IUnitOfWork
         AuditLogs = new Repository<AuditLog>(context);
         CustomCakeOrders = new Repository<CustomCakeOrder>(context);
         ContactMessages = new Repository<ContactMessage>(context);
+        Notifications = new Repository<Notification>(context);
     }
 
     public IRepository<User> Users { get; }
@@ -38,6 +39,7 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<AuditLog> AuditLogs { get; }
     public IRepository<CustomCakeOrder> CustomCakeOrders { get; }
     public IRepository<ContactMessage> ContactMessages { get; }
+    public IRepository<Notification> Notifications { get; }
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default) => _context.SaveChangesAsync(ct);
 }

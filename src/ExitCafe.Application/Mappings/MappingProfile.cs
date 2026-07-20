@@ -3,6 +3,7 @@ using ExitCafe.Application.DTOs.Categories;
 using ExitCafe.Application.DTOs.Contact;
 using ExitCafe.Application.DTOs.CustomCakeOrders;
 using ExitCafe.Application.DTOs.Customers;
+using ExitCafe.Application.DTOs.Notifications;
 using ExitCafe.Application.DTOs.Orders;
 using ExitCafe.Application.DTOs.Products;
 using ExitCafe.Domain.Entities;
@@ -37,5 +38,6 @@ public class MappingProfile : Profile
 
         CreateMap<CustomCakeOrder, CustomCakeOrderDto>();
         CreateMap<ContactMessage, ContactMessageDto>();
+        CreateMap<Notification, NotificationDto>();
     }
 }

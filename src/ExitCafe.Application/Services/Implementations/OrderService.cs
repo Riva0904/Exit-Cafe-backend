@@ -18,12 +18,14 @@ public class OrderService : IOrderService
     private readonly IUnitOfWork _uow;
     private readonly IMapper _mapper;
     private readonly IAuditLogService _auditLog;
+    private readonly INotificationService _notifications;
 
-    public OrderService(IUnitOfWork uow, IMapper mapper, IAuditLogService auditLog)
+    public OrderService(IUnitOfWork uow, IMapper mapper, IAuditLogService auditLog, INotificationService notifications)
     {
         _uow = uow;
         _mapper = mapper;
         _auditLog = auditLog;
+        _notifications = notifications;
     }
 
     private IQueryable<Order> BaseQuery() =>
@@ -154,6 +156,13 @@ public class OrderService : IOrderService
         await _auditLog.LogAsync("OrderCreated", nameof(Order), order.Id.ToString(), ct: ct);
 
         var created = await BaseQuery().FirstAsync(o => o.Id == order.Id, ct);
+        await _notifications.CreateAsync(
+            "New order received",
+            $"Order {order.OrderNumber} placed by {created.Customer.FirstName} {created.Customer.LastName} — ₹{order.TotalAmount:0}",
+            "NewOrder",
+            order.Id,
+            ct);
+
         return _mapper.Map<OrderDto>(created);
     }
 
