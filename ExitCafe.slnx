@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ExitCafe.Application/ExitCafe.Application.csproj" />
+    <Project Path="src/ExitCafe.Domain/ExitCafe.Domain.csproj" />
+    <Project Path="src/ExitCafe.Infrastructure/ExitCafe.Infrastructure.csproj" />
+    <Project Path="src/ExitCafe.WebApi/ExitCafe.WebApi.csproj" />
+  </Folder>
+</Solution>

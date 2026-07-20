@@ -1,0 +1,6 @@
+@ExitCafe.WebApi_HostAddress = http://localhost:5089
+
+GET {{ExitCafe.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
