@@ -23,6 +23,15 @@ public class Order : BaseAuditableEntity
 
     public Guid? DeliveryAddressId { get; set; }
     public CustomerAddress? DeliveryAddress { get; set; }
+
+    // Denormalized delivery address for guest checkout, where there's no saved address book
+    // entry to reference yet. DeliveryAddressId remains available for registered customers
+    // ordering against a saved address.
+    public string? DeliveryAddressLine1 { get; set; }
+    public string? DeliveryCity { get; set; }
+    public string? DeliveryState { get; set; }
+    public string? DeliveryPostalCode { get; set; }
+
     public DateOnly? DeliveryDate { get; set; }
     public TimeOnly? DeliveryTime { get; set; }
 

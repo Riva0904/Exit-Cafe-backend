@@ -18,9 +18,23 @@ public class CreateOrderRequestValidator : AbstractValidator<CreateOrderRequest>
         RuleFor(x => x.GuestEmail).EmailAddress().When(x => x.CustomerId == null)
             .WithMessage("A valid email is required for guest checkout.");
 
-        RuleFor(x => x.DeliveryAddressId).NotEmpty()
+        RuleFor(x => x)
+            .Must(x => x.DeliveryAddressId.HasValue || !string.IsNullOrWhiteSpace(x.DeliveryAddressLine1))
             .When(x => x.OrderType == OrderType.Delivery)
-            .WithMessage("Delivery address is required for delivery orders.");
+            .WithMessage("A delivery address is required for delivery orders.")
+            .OverridePropertyName("DeliveryAddressLine1");
+
+        RuleFor(x => x.DeliveryCity).NotEmpty()
+            .When(x => x.OrderType == OrderType.Delivery && !x.DeliveryAddressId.HasValue)
+            .WithMessage("City is required for delivery orders.");
+
+        RuleFor(x => x.DeliveryState).NotEmpty()
+            .When(x => x.OrderType == OrderType.Delivery && !x.DeliveryAddressId.HasValue)
+            .WithMessage("State is required for delivery orders.");
+
+        RuleFor(x => x.DeliveryPostalCode).NotEmpty()
+            .When(x => x.OrderType == OrderType.Delivery && !x.DeliveryAddressId.HasValue)
+            .WithMessage("Postal code is required for delivery orders.");
     }
 }
 

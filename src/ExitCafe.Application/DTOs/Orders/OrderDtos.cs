@@ -9,6 +9,10 @@ public record CreateOrderRequest(
     string? GuestFirstName, string? GuestLastName, string? GuestEmail, string? GuestPhone,
     OrderType OrderType,
     Guid? DeliveryAddressId,
+    string? DeliveryAddressLine1,
+    string? DeliveryCity,
+    string? DeliveryState,
+    string? DeliveryPostalCode,
     DateOnly? DeliveryDate,
     TimeOnly? DeliveryTime,
     PaymentMethod PaymentMethod,
@@ -40,6 +44,10 @@ public class OrderDto
     public decimal DeliveryFee { get; set; }
     public decimal TotalAmount { get; set; }
     public string? CouponCode { get; set; }
+    public string? DeliveryAddressLine1 { get; set; }
+    public string? DeliveryCity { get; set; }
+    public string? DeliveryState { get; set; }
+    public string? DeliveryPostalCode { get; set; }
     public DateOnly? DeliveryDate { get; set; }
     public TimeOnly? DeliveryTime { get; set; }
     public PaymentStatus PaymentStatus { get; set; }

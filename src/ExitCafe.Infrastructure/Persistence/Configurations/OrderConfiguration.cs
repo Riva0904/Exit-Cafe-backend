@@ -16,6 +16,10 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.TaxAmount).HasPrecision(10, 2);
         builder.Property(o => o.DeliveryFee).HasPrecision(10, 2);
         builder.Property(o => o.TotalAmount).HasPrecision(10, 2);
+        builder.Property(o => o.DeliveryAddressLine1).HasMaxLength(250);
+        builder.Property(o => o.DeliveryCity).HasMaxLength(100);
+        builder.Property(o => o.DeliveryState).HasMaxLength(100);
+        builder.Property(o => o.DeliveryPostalCode).HasMaxLength(20);
 
         builder.HasOne(o => o.Customer)
             .WithMany(c => c.Orders)
