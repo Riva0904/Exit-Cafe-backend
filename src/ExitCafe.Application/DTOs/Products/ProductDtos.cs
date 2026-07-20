@@ -22,6 +22,7 @@ public class ProductListItemDto
     public bool IsNewArrival { get; set; }
     public decimal AverageRating { get; set; }
     public int ReviewCount { get; set; }
+    public int StockQuantity { get; set; }
     public string CategoryName { get; set; } = default!;
 }
 

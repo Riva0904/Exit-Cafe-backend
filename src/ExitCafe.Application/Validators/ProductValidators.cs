@@ -10,6 +10,9 @@ public class CreateProductRequestValidator : AbstractValidator<CreateProductRequ
         RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
         RuleFor(x => x.SKU).NotEmpty().MaximumLength(50);
         RuleFor(x => x.Price).GreaterThan(0);
+        RuleFor(x => x.DiscountPrice).GreaterThan(0)
+            .When(x => x.DiscountPrice.HasValue)
+            .WithMessage("Discount price must be greater than 0 — send null to indicate no discount.");
         RuleFor(x => x.DiscountPrice).LessThan(x => x.Price)
             .When(x => x.DiscountPrice.HasValue)
             .WithMessage("Discount price must be less than the regular price.");
@@ -24,6 +27,9 @@ public class UpdateProductRequestValidator : AbstractValidator<UpdateProductRequ
     {
         RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
         RuleFor(x => x.Price).GreaterThan(0);
+        RuleFor(x => x.DiscountPrice).GreaterThan(0)
+            .When(x => x.DiscountPrice.HasValue)
+            .WithMessage("Discount price must be greater than 0 — send null to indicate no discount.");
         RuleFor(x => x.DiscountPrice).LessThan(x => x.Price)
             .When(x => x.DiscountPrice.HasValue)
             .WithMessage("Discount price must be less than the regular price.");
