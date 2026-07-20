@@ -1,5 +1,6 @@
 using ExitCafe.Application.Common.Models;
 using ExitCafe.Application.DTOs.Categories;
+using ExitCafe.Application.DTOs.Products;
 using ExitCafe.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,10 +12,12 @@ namespace ExitCafe.WebApi.Controllers;
 public class CategoriesController : ControllerBase
 {
     private readonly ICategoryService _categoryService;
+    private readonly IProductService _productService;
 
-    public CategoriesController(ICategoryService categoryService)
+    public CategoriesController(ICategoryService categoryService, IProductService productService)
     {
         _categoryService = categoryService;
+        _productService = productService;
     }
 
     [HttpGet]
@@ -36,6 +39,16 @@ public class CategoriesController : ControllerBase
     {
         var result = await _categoryService.GetBySlugAsync(slug, ct);
         return Ok(ApiResponse<CategoryDto>.Ok(result));
+    }
+
+    [HttpGet("{slug}/products")]
+    public async Task<ActionResult<ApiResponse<PagedResult<ProductListItemDto>>>> GetProducts(
+        string slug, [FromQuery] ProductQueryParams query, CancellationToken ct)
+    {
+        var category = await _categoryService.GetBySlugAsync(slug, ct);
+        query.CategoryId = category.Id;
+        var result = await _productService.GetAllAsync(query, ct);
+        return Ok(ApiResponse<PagedResult<ProductListItemDto>>.Ok(result));
     }
 
     [HttpPost]
