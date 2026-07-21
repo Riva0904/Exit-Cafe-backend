@@ -14,5 +14,7 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         builder.Property(n => n.Type).IsRequired().HasMaxLength(50);
         builder.HasIndex(n => n.IsRead);
         builder.HasIndex(n => n.CreatedAt);
+        builder.HasIndex(n => n.CustomerId);
+        builder.HasOne(n => n.Customer).WithMany().HasForeignKey(n => n.CustomerId).OnDelete(DeleteBehavior.Cascade);
     }
 }

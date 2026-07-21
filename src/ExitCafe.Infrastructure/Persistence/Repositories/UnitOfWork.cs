@@ -21,9 +21,9 @@ public class UnitOfWork : IUnitOfWork
         Orders = new Repository<Order>(context);
         OrderItems = new Repository<OrderItem>(context);
         AuditLogs = new Repository<AuditLog>(context);
-        CustomCakeOrders = new Repository<CustomCakeOrder>(context);
         ContactMessages = new Repository<ContactMessage>(context);
         Notifications = new Repository<Notification>(context);
+        Reviews = new Repository<Review>(context);
     }
 
     public IRepository<User> Users { get; }
@@ -37,9 +37,9 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<Order> Orders { get; }
     public IRepository<OrderItem> OrderItems { get; }
     public IRepository<AuditLog> AuditLogs { get; }
-    public IRepository<CustomCakeOrder> CustomCakeOrders { get; }
     public IRepository<ContactMessage> ContactMessages { get; }
     public IRepository<Notification> Notifications { get; }
+    public IRepository<Review> Reviews { get; }
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default) => _context.SaveChangesAsync(ct);
 }

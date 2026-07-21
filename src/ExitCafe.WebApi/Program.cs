@@ -8,7 +8,6 @@ using ExitCafe.Infrastructure.Persistence;
 using ExitCafe.Infrastructure.Persistence.Seed;
 using ExitCafe.WebApi.Extensions;
 using ExitCafe.WebApi.Middleware;
-using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
@@ -22,6 +21,10 @@ try
 {
     var builder = WebApplication.CreateBuilder(args);
 
+    // wwwroot must exist before Build() resolves IWebHostEnvironment.WebRootFileProvider, otherwise
+    // static file serving binds to a NullFileProvider and never picks up files written here later.
+    Directory.CreateDirectory(Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "uploads"));
+
     builder.Host.UseSerilog((context, services, configuration) => configuration
         .ReadFrom.Configuration(context.Configuration)
         .ReadFrom.Services(services)
@@ -33,10 +36,8 @@ try
     builder.Services.AddApplication();
     builder.Services.AddInfrastructure(builder.Configuration);
 
-    // Controllers + validation
+    // Controllers (request validation runs through the MediatR ValidationBehavior pipeline)
     builder.Services.AddControllers();
-    builder.Services.AddFluentValidationAutoValidation();
-    builder.Services.AddFluentValidationClientsideAdapters();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerDocumentation();
 
@@ -100,14 +101,19 @@ try
         app.UseSwaggerUI();
     }
 
-    app.UseMiddleware<GlobalExceptionMiddleware>();
+    // Serilog's request logger must wrap the exception handler (not the other way around) — otherwise
+    // it logs the raw pre-handling exception as a 500 even when GlobalExceptionMiddleware goes on to
+    // correctly map it to 404/400/etc, making the logs lie about what the client actually received.
     app.UseSerilogRequestLogging();
+    app.UseMiddleware<GlobalExceptionMiddleware>();
 
     app.UseIpRateLimiting();
 
     app.UseHttpsRedirection();
 
     app.UseCors("DefaultCorsPolicy");
+
+    app.UseStaticFiles();
 
     app.UseAuthentication();
     app.UseAuthorization();

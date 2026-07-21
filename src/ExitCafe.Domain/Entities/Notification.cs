@@ -8,6 +8,10 @@ public class Notification : BaseEntity
     public string Message { get; set; } = default!;
     public string Type { get; set; } = default!;
     public Guid? RelatedEntityId { get; set; }
+
+    /// <summary>Null means a staff-broadcast notification (e.g. new order); set means it targets one customer (e.g. rate-your-order).</summary>
+    public Guid? CustomerId { get; set; }
+    public Customer? Customer { get; set; }
     public bool IsRead { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

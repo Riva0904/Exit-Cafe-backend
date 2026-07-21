@@ -1,9 +1,13 @@
-using ExitCafe.Application.Common.Interfaces;
 using ExitCafe.Application.Common.Models;
-using ExitCafe.Application.DTOs.Orders;
-using ExitCafe.Application.Services.Interfaces;
-using ExitCafe.Domain.Enums;
-using ExitCafe.Domain.Exceptions;
+using ExitCafe.Application.Features.Orders.Commands.CancelOrder;
+using ExitCafe.Application.Features.Orders.Commands.CreateOrder;
+using ExitCafe.Application.Features.Orders.Commands.UpdateOrderStatus;
+using ExitCafe.Application.Features.Orders.Dtos;
+using ExitCafe.Application.Features.Orders.Queries.GetMyOrders;
+using ExitCafe.Application.Features.Orders.Queries.GetOrderById;
+using ExitCafe.Application.Features.Orders.Queries.GetOrders;
+using ExitCafe.Application.Features.Orders.Queries.GetOrdersByCustomer;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,66 +17,65 @@ namespace ExitCafe.WebApi.Controllers;
 [Route("api/orders")]
 public class OrdersController : ControllerBase
 {
-    private readonly IOrderService _orderService;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IMediator _mediator;
 
-    public OrdersController(IOrderService orderService, ICurrentUserService currentUserService)
+    public OrdersController(IMediator mediator)
     {
-        _orderService = orderService;
-        _currentUserService = currentUserService;
+        _mediator = mediator;
     }
 
     [HttpGet("my")]
     [Authorize]
     public async Task<ActionResult<ApiResponse<List<OrderDto>>>> GetMyOrders(CancellationToken ct)
     {
-        var userId = _currentUserService.UserId ?? throw new UnauthorizedException();
-        var result = await _orderService.GetByUserIdAsync(userId, ct);
+        var result = await _mediator.Send(new GetMyOrdersQuery(), ct);
         return Ok(ApiResponse<List<OrderDto>>.Ok(result));
     }
 
     [HttpGet]
     [Authorize(Policy = "StaffAndAbove")]
-    public async Task<ActionResult<ApiResponse<PagedResult<OrderDto>>>> GetAll(
-        [FromQuery] PaginationParams query, [FromQuery] OrderStatus? status, CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<PagedResult<OrderDto>>>> GetAll([FromQuery] GetOrdersQuery query, CancellationToken ct)
     {
-        var result = await _orderService.GetAllAsync(query, status, ct);
+        var result = await _mediator.Send(query, ct);
         return Ok(ApiResponse<PagedResult<OrderDto>>.Ok(result));
     }
 
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<ApiResponse<OrderDto>>> GetById(Guid id, CancellationToken ct)
     {
-        var result = await _orderService.GetByIdAsync(id, ct);
+        var result = await _mediator.Send(new GetOrderByIdQuery(id), ct);
         return Ok(ApiResponse<OrderDto>.Ok(result));
     }
 
     [HttpGet("customer/{customerId:guid}")]
+    [Authorize(Policy = "StaffAndAbove")]
     public async Task<ActionResult<ApiResponse<List<OrderDto>>>> GetByCustomer(Guid customerId, CancellationToken ct)
     {
-        var result = await _orderService.GetByCustomerAsync(customerId, ct);
+        var result = await _mediator.Send(new GetOrdersByCustomerQuery(customerId), ct);
         return Ok(ApiResponse<List<OrderDto>>.Ok(result));
     }
 
     [HttpPost]
-    public async Task<ActionResult<ApiResponse<OrderDto>>> Create(CreateOrderRequest request, CancellationToken ct)
+    [Authorize]
+    public async Task<ActionResult<ApiResponse<OrderDto>>> Create(CreateOrderCommand command, CancellationToken ct)
     {
-        var result = await _orderService.CreateAsync(request, ct);
+        var result = await _mediator.Send(command, ct);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResponse<OrderDto>.Ok(result, "Order placed successfully."));
     }
 
     [HttpPatch("{id:guid}/status")]
     [Authorize(Policy = "StaffAndAbove")]
-    public async Task<ActionResult<ApiResponse<OrderDto>>> UpdateStatus(Guid id, UpdateOrderStatusRequest request, CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<OrderDto>>> UpdateStatus(Guid id, UpdateOrderStatusCommand command, CancellationToken ct)
     {
-        var result = await _orderService.UpdateStatusAsync(id, request.Status, ct);
+        var result = await _mediator.Send(command with { Id = id }, ct);
         return Ok(ApiResponse<OrderDto>.Ok(result, "Order status updated."));
     }
 
     [HttpPost("{id:guid}/cancel")]
+    [Authorize]
     public async Task<IActionResult> Cancel(Guid id, CancellationToken ct)
     {
-        await _orderService.CancelAsync(id, ct);
+        await _mediator.Send(new CancelOrderCommand(id), ct);
         return NoContent();
     }
 }

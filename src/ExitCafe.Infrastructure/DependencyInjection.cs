@@ -1,5 +1,4 @@
 using ExitCafe.Application.Common.Interfaces;
-using ExitCafe.Application.Services.Interfaces;
 using ExitCafe.Infrastructure.Persistence;
 using ExitCafe.Infrastructure.Persistence.Repositories;
 using ExitCafe.Infrastructure.Services;
@@ -23,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IAuditLogService, AuditLogService>();
+        services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
         return services;
     }

@@ -3,6 +3,7 @@ obj/
 *.user
 .vs/
 logs/
+src/ExitCafe.WebApi/wwwroot/uploads/
 appsettings.*.local.json
 .env
 !.env.example

@@ -1,6 +1,9 @@
 using ExitCafe.Application.Common.Models;
-using ExitCafe.Application.DTOs.Contact;
-using ExitCafe.Application.Services.Interfaces;
+using ExitCafe.Application.Features.Contact.Commands.CreateContactMessage;
+using ExitCafe.Application.Features.Contact.Commands.MarkContactMessageAsRead;
+using ExitCafe.Application.Features.Contact.Dtos;
+using ExitCafe.Application.Features.Contact.Queries.GetContactMessages;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,25 +13,25 @@ namespace ExitCafe.WebApi.Controllers;
 [Route("api/contact")]
 public class ContactController : ControllerBase
 {
-    private readonly IContactService _service;
+    private readonly IMediator _mediator;
 
-    public ContactController(IContactService service)
+    public ContactController(IMediator mediator)
     {
-        _service = service;
+        _mediator = mediator;
     }
 
     [HttpPost]
-    public async Task<ActionResult<ApiResponse<ContactMessageDto>>> Create(CreateContactMessageRequest request, CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<ContactMessageDto>>> Create(CreateContactMessageCommand command, CancellationToken ct)
     {
-        var result = await _service.CreateAsync(request, ct);
+        var result = await _mediator.Send(command, ct);
         return Ok(ApiResponse<ContactMessageDto>.Ok(result, "Thanks for reaching out — we'll get back to you soon."));
     }
 
     [HttpGet]
     [Authorize(Policy = "StaffAndAbove")]
-    public async Task<ActionResult<ApiResponse<PagedResult<ContactMessageDto>>>> GetAll([FromQuery] PaginationParams query, CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<PagedResult<ContactMessageDto>>>> GetAll([FromQuery] GetContactMessagesQuery query, CancellationToken ct)
     {
-        var result = await _service.GetAllAsync(query, ct);
+        var result = await _mediator.Send(query, ct);
         return Ok(ApiResponse<PagedResult<ContactMessageDto>>.Ok(result));
     }
 
@@ -36,7 +39,7 @@ public class ContactController : ControllerBase
     [Authorize(Policy = "StaffAndAbove")]
     public async Task<ActionResult<ApiResponse<ContactMessageDto>>> MarkAsRead(Guid id, CancellationToken ct)
     {
-        var result = await _service.MarkAsReadAsync(id, ct);
+        var result = await _mediator.Send(new MarkContactMessageAsReadCommand(id), ct);
         return Ok(ApiResponse<ContactMessageDto>.Ok(result, "Marked as read."));
     }
 }

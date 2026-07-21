@@ -15,9 +15,9 @@ public interface IUnitOfWork
     IRepository<Order> Orders { get; }
     IRepository<OrderItem> OrderItems { get; }
     IRepository<AuditLog> AuditLogs { get; }
-    IRepository<CustomCakeOrder> CustomCakeOrders { get; }
     IRepository<ContactMessage> ContactMessages { get; }
     IRepository<Notification> Notifications { get; }
+    IRepository<Review> Reviews { get; }
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }

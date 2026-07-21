@@ -1,6 +1,10 @@
 using ExitCafe.Application.Common.Models;
-using ExitCafe.Application.DTOs.Notifications;
-using ExitCafe.Application.Services.Interfaces;
+using ExitCafe.Application.Features.Notifications.Commands.MarkAllNotificationsAsRead;
+using ExitCafe.Application.Features.Notifications.Commands.MarkNotificationAsRead;
+using ExitCafe.Application.Features.Notifications.Dtos;
+using ExitCafe.Application.Features.Notifications.Queries.GetNotifications;
+using ExitCafe.Application.Features.Notifications.Queries.GetUnreadNotificationCount;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,38 +15,38 @@ namespace ExitCafe.WebApi.Controllers;
 [Authorize(Policy = "StaffAndAbove")]
 public class NotificationsController : ControllerBase
 {
-    private readonly INotificationService _service;
+    private readonly IMediator _mediator;
 
-    public NotificationsController(INotificationService service)
+    public NotificationsController(IMediator mediator)
     {
-        _service = service;
+        _mediator = mediator;
     }
 
     [HttpGet]
-    public async Task<ActionResult<ApiResponse<PagedResult<NotificationDto>>>> GetAll([FromQuery] PaginationParams query, CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<PagedResult<NotificationDto>>>> GetAll([FromQuery] GetNotificationsQuery query, CancellationToken ct)
     {
-        var result = await _service.GetAllAsync(query, ct);
+        var result = await _mediator.Send(query, ct);
         return Ok(ApiResponse<PagedResult<NotificationDto>>.Ok(result));
     }
 
     [HttpGet("unread-count")]
     public async Task<ActionResult<ApiResponse<int>>> GetUnreadCount(CancellationToken ct)
     {
-        var result = await _service.GetUnreadCountAsync(ct);
+        var result = await _mediator.Send(new GetUnreadNotificationCountQuery(), ct);
         return Ok(ApiResponse<int>.Ok(result));
     }
 
     [HttpPatch("{id:guid}/read")]
     public async Task<IActionResult> MarkAsRead(Guid id, CancellationToken ct)
     {
-        await _service.MarkAsReadAsync(id, ct);
+        await _mediator.Send(new MarkNotificationAsReadCommand(id), ct);
         return NoContent();
     }
 
     [HttpPatch("read-all")]
     public async Task<IActionResult> MarkAllAsRead(CancellationToken ct)
     {
-        await _service.MarkAllAsReadAsync(ct);
+        await _mediator.Send(new MarkAllNotificationsAsReadCommand(), ct);
         return NoContent();
     }
 }

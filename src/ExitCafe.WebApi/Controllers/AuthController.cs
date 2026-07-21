@@ -1,6 +1,10 @@
 using ExitCafe.Application.Common.Models;
-using ExitCafe.Application.DTOs.Auth;
-using ExitCafe.Application.Services.Interfaces;
+using ExitCafe.Application.Features.Auth.Commands.Login;
+using ExitCafe.Application.Features.Auth.Commands.RefreshToken;
+using ExitCafe.Application.Features.Auth.Commands.Register;
+using ExitCafe.Application.Features.Auth.Commands.RevokeToken;
+using ExitCafe.Application.Features.Auth.Dtos;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ExitCafe.WebApi.Controllers;
@@ -9,40 +13,40 @@ namespace ExitCafe.WebApi.Controllers;
 [Route("api/auth")]
 public class AuthController : ControllerBase
 {
-    private readonly IAuthService _authService;
+    private readonly IMediator _mediator;
 
-    public AuthController(IAuthService authService)
+    public AuthController(IMediator mediator)
     {
-        _authService = authService;
+        _mediator = mediator;
     }
 
     private string? IpAddress => HttpContext.Connection.RemoteIpAddress?.ToString();
 
     [HttpPost("register")]
-    public async Task<ActionResult<ApiResponse<AuthResponse>>> Register(RegisterRequest request, CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<AuthResponse>>> Register(RegisterCommand command, CancellationToken ct)
     {
-        var result = await _authService.RegisterAsync(request, ct);
+        var result = await _mediator.Send(command, ct);
         return Ok(ApiResponse<AuthResponse>.Ok(result, "Registration successful."));
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<ApiResponse<AuthResponse>>> Login(LoginRequest request, CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<AuthResponse>>> Login(LoginCommand command, CancellationToken ct)
     {
-        var result = await _authService.LoginAsync(request, IpAddress, ct);
+        var result = await _mediator.Send(command with { IpAddress = IpAddress }, ct);
         return Ok(ApiResponse<AuthResponse>.Ok(result, "Login successful."));
     }
 
     [HttpPost("refresh-token")]
-    public async Task<ActionResult<ApiResponse<AuthResponse>>> RefreshToken(RefreshTokenRequest request, CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<AuthResponse>>> RefreshToken(RefreshTokenCommand command, CancellationToken ct)
     {
-        var result = await _authService.RefreshTokenAsync(request.RefreshToken, IpAddress, ct);
+        var result = await _mediator.Send(command with { IpAddress = IpAddress }, ct);
         return Ok(ApiResponse<AuthResponse>.Ok(result, "Token refreshed."));
     }
 
     [HttpPost("revoke-token")]
-    public async Task<ActionResult<ApiResponse<object>>> RevokeToken(RefreshTokenRequest request, CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<object>>> RevokeToken(RevokeTokenCommand command, CancellationToken ct)
     {
-        await _authService.RevokeTokenAsync(request.RefreshToken, IpAddress, ct);
+        await _mediator.Send(command with { IpAddress = IpAddress }, ct);
         return Ok(ApiResponse<object>.Ok(new { }, "Token revoked."));
     }
 }
