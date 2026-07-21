@@ -47,7 +47,10 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
         product.StockQuantity = request.StockQuantity;
         product.CategoryId = request.CategoryId;
 
-        _uow.Products.Update(product);
+        // No explicit Update(): product is already tracked from GetByIdAsync (a plain FindAsync with
+        // no Include), so its Images navigation is the entity's default empty list, not the real
+        // photos. Update() would mark that empty collection authoritative for this Cascade-configured
+        // relationship and delete the real ProductImages rows on save.
         await _uow.SaveChangesAsync(ct);
 
         var updated = await BaseQuery().FirstAsync(p => p.Id == product.Id, ct);

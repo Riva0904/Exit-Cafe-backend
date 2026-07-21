@@ -33,7 +33,11 @@ public class UpdateOrderStatusCommandHandler : IRequestHandler<UpdateOrderStatus
         ValidateStatusTransition(order.Status, request.Status);
         order.Status = request.Status;
 
-        _uow.Orders.Update(order);
+        // No explicit Update() call: `order` is already tracked from GetByIdAsync (a plain FindAsync
+        // with no Include), so its OrderItems navigation is the entity's default empty list, not the
+        // real children. Calling Update() here would mark that empty collection as the authoritative
+        // state for this Cascade-configured relationship and delete the real OrderItems rows on save.
+        // The scalar Status mutation above is picked up by SaveChangesAsync's own change detection.
         await _uow.SaveChangesAsync(ct);
         await _auditLog.LogAsync("OrderStatusChanged", nameof(Order), order.Id.ToString(), $"-> {request.Status}", ct);
 

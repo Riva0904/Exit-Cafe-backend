@@ -21,7 +21,7 @@ public class DeleteProductCommandHandler : IRequestHandler<DeleteProductCommand>
 
         product.IsDeleted = true;
         product.IsAvailable = false;
-        _uow.Products.Update(product);
+        // See UpdateProductCommandHandler: no explicit Update() — would wipe the Images collection.
         await _uow.SaveChangesAsync(ct);
     }
 }

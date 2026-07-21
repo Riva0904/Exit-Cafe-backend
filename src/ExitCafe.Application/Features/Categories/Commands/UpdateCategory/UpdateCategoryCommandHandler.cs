@@ -33,7 +33,9 @@ public class UpdateCategoryCommandHandler : IRequestHandler<UpdateCategoryComman
         category.IsActive = request.IsActive;
         category.ParentCategoryId = request.ParentCategoryId;
 
-        _uow.Categories.Update(category);
+        // No explicit Update(): category is already tracked from GetByIdAsync. See
+        // UpdateProductCommandHandler for why calling Update() on a partially-loaded entity
+        // with an unloaded collection navigation (here, Products) is unsafe.
         await _uow.SaveChangesAsync(ct);
 
         var updated = await _uow.Categories.Query().Include(c => c.Products).FirstAsync(c => c.Id == category.Id, ct);

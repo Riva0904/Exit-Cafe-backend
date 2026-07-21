@@ -60,7 +60,7 @@ public class CreateReviewCommandHandler : IRequestHandler<CreateReviewCommand, R
             ?? throw new NotFoundException(nameof(Product), request.ProductId);
         product.AverageRating = Math.Round((decimal)ratings.Average(), 1);
         product.ReviewCount = ratings.Count;
-        _uow.Products.Update(product);
+        // No explicit Update(): see UpdateProductCommandHandler — would wipe the product's Images.
         await _uow.SaveChangesAsync(ct);
 
         return _mapper.Map<ReviewDto>(review);

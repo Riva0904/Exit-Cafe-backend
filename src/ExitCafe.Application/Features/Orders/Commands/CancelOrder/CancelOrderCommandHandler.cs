@@ -45,7 +45,9 @@ public class CancelOrderCommandHandler : IRequestHandler<CancelOrderCommand>
             throw new BadRequestException($"Order in status '{order.Status}' cannot be cancelled.");
 
         order.Status = OrderStatus.Cancelled;
-        _uow.Orders.Update(order);
+        // See UpdateOrderStatusCommandHandler: no explicit Update() — order is already tracked from
+        // GetByIdAsync, and calling Update() here would wipe OrderItems (loaded as an empty default
+        // collection, not included) on this Cascade-configured relationship.
         await _uow.SaveChangesAsync(ct);
         await _auditLog.LogAsync("OrderCancelled", nameof(Order), order.Id.ToString(), ct: ct);
     }
