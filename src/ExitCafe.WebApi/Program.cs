@@ -19,11 +19,13 @@ Log.Logger = new LoggerConfiguration()
 
 try
 {
-    var builder = WebApplication.CreateBuilder(args);
+    // wwwroot must exist before WebApplication.CreateBuilder resolves IWebHostEnvironment.WebRootFileProvider
+    // (it binds that provider during CreateBuilder itself, not at Build()) — otherwise static file serving
+    // binds to a NullFileProvider for the lifetime of the process and never picks up files written here later,
+    // even after this directory exists on disk.
+    Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads"));
 
-    // wwwroot must exist before Build() resolves IWebHostEnvironment.WebRootFileProvider, otherwise
-    // static file serving binds to a NullFileProvider and never picks up files written here later.
-    Directory.CreateDirectory(Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "uploads"));
+    var builder = WebApplication.CreateBuilder(args);
 
     builder.Host.UseSerilog((context, services, configuration) => configuration
         .ReadFrom.Configuration(context.Configuration)
@@ -100,6 +102,14 @@ try
         app.UseSwagger();
         app.UseSwaggerUI();
     }
+
+    // Render (and most PaaS hosts) terminate TLS at the edge and forward plain HTTP to Kestrel — without
+    // this, Request.Scheme is always "http", which breaks UseHttpsRedirection and any absolute URL built
+    // from Request.Scheme (e.g. uploaded file URLs).
+    app.UseForwardedHeaders(new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+    });
 
     // Serilog's request logger must wrap the exception handler (not the other way around) — otherwise
     // it logs the raw pre-handling exception as a 500 even when GlobalExceptionMiddleware goes on to
