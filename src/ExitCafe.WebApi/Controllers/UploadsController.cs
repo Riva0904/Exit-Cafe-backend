@@ -23,9 +23,11 @@ public class UploadsController : ControllerBase
     public async Task<ActionResult<ApiResponse<List<string>>>> UploadImages(string subfolder, [FromForm] List<IFormFile> files, CancellationToken ct)
     {
         var payloads = files.Select(f => new UploadedFilePayload(f.OpenReadStream(), f.FileName, f.ContentType, f.Length)).ToList();
-        var relativeUrls = await _mediator.Send(new UploadImagesCommand(payloads, subfolder), ct);
+        var urls = await _mediator.Send(new UploadImagesCommand(payloads, subfolder), ct);
+        // Storage backends may return either an app-relative path (local disk) or an already-absolute
+        // URL (Cloudinary and similar). Only the former needs this API's own scheme+host prefixed.
         var baseUrl = $"{Request.Scheme}://{Request.Host}";
-        var absoluteUrls = relativeUrls.Select(u => $"{baseUrl}{u}").ToList();
+        var absoluteUrls = urls.Select(u => u.StartsWith("http://") || u.StartsWith("https://") ? u : $"{baseUrl}{u}").ToList();
         return Ok(ApiResponse<List<string>>.Ok(absoluteUrls, "Images uploaded."));
     }
 }
