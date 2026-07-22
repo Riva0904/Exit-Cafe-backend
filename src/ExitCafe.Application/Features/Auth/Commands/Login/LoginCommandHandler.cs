@@ -34,7 +34,10 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponse>
             throw new ForbiddenException("This account has been deactivated.");
 
         user.LastLoginAt = DateTime.UtcNow;
-        _uow.Users.Update(user);
+        // No explicit Update(): user is already tracked from the query above. Users.RefreshTokens
+        // loads as the entity's default empty list here (not Included), so calling Update() would
+        // mark that empty collection authoritative and silently revoke every other active session's
+        // refresh token on every login — same class of bug as Order/Product/Category elsewhere.
         await _uow.SaveChangesAsync(ct);
         await _auditLog.LogAsync("UserLoggedIn", nameof(User), user.Id.ToString(), ct: ct);
 
