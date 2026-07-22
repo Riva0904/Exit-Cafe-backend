@@ -81,6 +81,14 @@ try
         });
     });
 
+    // gzip/brotli compression for JSON API responses (product/category/order lists are the
+    // biggest payloads this API serves; images under /uploads are already compressed formats
+    // and get little benefit, but the default provider skips those content types anyway).
+    builder.Services.AddResponseCompression(options =>
+    {
+        options.EnableForHttps = true;
+    });
+
     // API rate limiting
     builder.Services.AddMemoryCache();
     builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
@@ -116,6 +124,8 @@ try
     // correctly map it to 404/400/etc, making the logs lie about what the client actually received.
     app.UseSerilogRequestLogging();
     app.UseMiddleware<GlobalExceptionMiddleware>();
+
+    app.UseResponseCompression();
 
     app.UseIpRateLimiting();
 
